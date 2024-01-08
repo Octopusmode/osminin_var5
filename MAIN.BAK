@@ -1,0 +1,200 @@
+/*
+
+Program for solving cubic equations of the form
+
+	a*x^3 + b*x^2 + c*x + d = 0
+
+1.	Bring the equation into canonical form after dividing by 3:
+
+	x^3 + r*x^2 + s*x + t = 0
+
+	where:
+	r = a / b, s = c / a, t = d / a
+
+2.	Substitute x = y - r/3 in the equation to get the reduced equation:
+
+	y3 + py + q = 0
+
+	where:
+	p = ( 3*s - r^2 ) / 3, q = ( (2*r^3) / 27 ) - ( (r*s) / 3 ) + t
+
+3.	The number of real roots of the given equation depends on the sign of the discriminant
+
+	D = ( p / 3 )^3 + ( q / 2 )^2
+
+	Discr 	| Num of real roots | Num if complex roots
+	D >= 0	| 1					| 2
+	D < 0	| 3					| -
+
+4.	If D >= 0, the roots of the above equation can be calculated
+	using Cardano's formulas:
+	y1 = u + v
+	y2 = ( (-u + v) / 2 ) + ( ((u - v) / 2) * i * sqrt(3) )
+	y3 = ( (-u + v) / 2 ) - ( ((u - v) / 2) * i * sqrt(3) )
+
+	u = ( -q / 2 + sqrt(D) ) ** 1/3
+	v = ( -q / 2 - sqrt(D) ) ** 1/3
+
+	If D < 0, the equation has three real roots,
+	but they will be calculated through auxiliary complex quantities.
+	To get rid of this use the formulas:
+
+	y1 = 2 * ( (p * cos(phy/3)) ** 1/3 )
+	y2 = 2 * ( (p * cos(phy/3 + (2*pi/3))) ** 1/3 )
+	y3 = 2 * ( (p * cos(phy/3 + (4*pi/3))) ** 1/3 )
+
+	where:
+	p = sqrt( -p^3/27 ), cos(phy) = -q / 2*pi
+
+5.	After calculating the roots of the above equation, we need to use the formulas:
+
+	xk = yk - ( r / 3), k = 1, 2, 3, ...
+
+*/
+
+/* run this program using the console pauser or add your own getch, system("pause") or input loop */
+
+
+#include <stdio.h>
+#include <string.h>
+
+
+double getDoubleInput(const char *argName)
+/*
+	Type checking func
+*/
+{
+	double value;
+	int result;
+	char str[100];
+
+	do
+	{
+		printf("Input value for %s: ", argName);
+		if (fgets(str, sizeof(str), stdin) != NULL)
+		{
+			result = sscanf(str, "%lf", &value);
+		}
+		else
+		{
+			result = 0;
+		}
+
+		if (result != 1)
+		{
+			printf("Invalid input. Please try again.\n");
+		}
+	} while (result != 1);
+
+	return value;
+}
+
+int main()
+{
+	double a, b, c, d;
+	double r, s, t;
+	double p, q;
+	double D;
+	double ro, phy;
+	double x1, x2, x3;
+	double u, v, h, g;
+
+	double PI = M_PI;
+
+	clrscr();
+
+	printf("Cubic equation solver\n");
+	// Variables input with type check
+	a = getDoubleInput("a");
+	b = getDoubleInput("b");
+	c = getDoubleInput("c");
+	d = getDoubleInput("d");
+
+	clrscr();
+
+	// Cannonical equation coeffs calculation
+	r = b / a; s = c / a; t= d / a;
+	// Reduced equation coeffs calculation
+	p = (3 * s - r * r) / 3;
+	q = 2 * r * r * r / 27 - r * s / 3 + t;
+	// Discriminant calculation
+	D = pow(p / 3, 3) + pow(q / 2, 2);
+
+	if (D < 0)
+	{
+		// Auxiliary complex quantities calculation
+		ro = sqrt(-pow(p, 3) / 27);
+		phy = atan(-q / (2 * ro)) + M_PI / 2;
+		// Roots calculation
+		x1 = 2 * pow(ro, 1 / 3) * cos(phy / 3) - r / 3;
+		x2 = 2 * pow(ro, 1 / 3) * cos(phy / 3 + 2 * PI / 3) - r / 3;
+		x3 = 2 * pow(ro, 1 / 3) * cos(phy / 3 + 4 * PI / 3) - r / 3;
+	}
+	else
+	{
+		// Auxiliary complex quantities calculation
+		if (-q / 2 + sqrt(D) > 0)
+		{
+			u = pow(-q / 2 + sqrt(D), 1 / 3);
+		}
+		else if (-q / 2 + sqrt(D) < 0)
+		{
+			u = -pow(fabs(-q / 2 + sqrt(D)), 1 / 3);
+		}
+		else
+		{
+			u = 0;
+		}
+
+		if (-q / 2 - sqrt(D) > 0)
+		{
+			v = pow(-q / 2 - sqrt(D), 1 / 3);
+		}
+		else if (-q / 2 - sqrt(D) < 0)
+		{
+			v = -pow(fabs(-q / 2 - sqrt(D)), 1 / 3);
+		}
+		else
+		{
+			v = 0;
+		}
+		// Roots calculation
+		x1 = u + v - r / 3;
+		// Calculating the real part of complex roots
+		h = -(u + v) / 2 - r / 3;
+		// Calculating the imaginary part of complex roots
+		g = (u - v) / 2 - sqrt(3);
+		// Result output
+		printf("x1 = %lf\n", x1);
+		if (x2 >= 0) // If the imaginary part is positive
+		{
+			printf("x2 = %lf + %lf i\n", h, g);
+			printf("x3 = %lf - %lf i\n", h, g);
+		}
+		else // If the imaginary part is negative
+		{
+			printf("x2 = %lf - %lf i\n", h, fabs(g));
+			printf("x3 = %lf + %lf i\n", h, fabs(g));
+		}
+	}
+
+	// Result output
+	if (g >= 0) // If the imaginary part is positive
+	{
+		printf("x2 = %lf + %lf i\n", h, g);
+		printf("x3 = %lf - %lf i\n", h, g);
+	}
+	else
+	{
+		printf("x2 = %lf - %lf i\n", h, fabs(g));
+		printf("x3 = %lf + %lf i\n", h, fabs(g));
+	}
+
+	printf("r=%lf\t", r);
+	printf("s=%lf\t", s);
+
+	// Wait for user input to exit
+	getchar();
+
+	return 0;
+}
